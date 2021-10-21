@@ -1,3 +1,4 @@
+import "cropperjs/dist/cropper.css";
 import '../styles/globals.css'
 import { AuthenticationProvider } from 'swrlit'
 

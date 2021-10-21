@@ -2,8 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
-  .btn {
-    @apply rounded-full bg-pink-500 text-gray-200 font-bold ring-1 shadow-lg py-1 px-3 text-sm ring-gray-200 opacity-90;
+@layer utilities {
+  .btn-inset {
+    @apply rounded-full bg-teal-400 text-white font-bold shadow-inner hover:shadow-none;
   }
+
+  .btn-xl {
+    @apply py-4 px-6 text-xl;
+  }
+
+  .btn-lg {
+    @apply py-3 px-5 text-lg;
+  }
+
+  .btn-md {
+    @apply py-2 px-4 text-base;
+  }
+
+
 }
