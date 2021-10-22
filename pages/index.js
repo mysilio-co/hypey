@@ -1,10 +1,14 @@
 import { useCallback, useEffect } from 'react'
 import Head from 'next/head'
-import { useWebId, useContainer, useLoggedIn, useAuthentication, useProfile } from 'swrlit'
-import { getUrl, isContainer, getSolidDataset, createContainerAt } from '@inrupt/solid-client'
+import { useWebId, useThing, useLoggedIn, useAuthentication, useProfile } from 'swrlit'
+import {
+  getUrl, getUrlAll, addUrl, createContainerAt, buildThing, createThing, setThing
+} from '@inrupt/solid-client'
 import { WS } from '@inrupt/vocab-solid-common'
+
 import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
+import { HYPE } from '../vocab'
 
 const appPrefix = "hypey"
 
@@ -15,7 +19,7 @@ export function useStorageContainer(webId) {
 
 export function useHypeyContainerUrl(webId) {
   const storageContainer = useStorageContainer(webId)
-  return storageContainer && `${storageContainer}${appPrefix}/`
+  return storageContainer && `${storageContainer}public/${appPrefix}/`
 }
 
 export function useImageUploadContainerUrl(webId) {
@@ -23,27 +27,129 @@ export function useImageUploadContainerUrl(webId) {
   return hypeyContainerUrl && `${hypeyContainerUrl}images/`
 }
 
-function LoggedIn() {
+async function initializeAppResources(appContainerUrl, app, fetch) {
+  const imageUploadContainerUrl = getUrl(app, HYPE.imageUploadContainer)
+  // we're relying on /public existing at the root of a user's storage for now
+  // if we stop doing that we may need this code to ensure everything is
+  // set up with the right permissions
+  //await createContainerAt(appContainerUrl, { fetch })
+  //await setPublicAccess(appContainerUrl, { read: true }, { fetch })
+
+  if (imageUploadContainerUrl) {
+    await createContainerAt(imageUploadContainerUrl, { fetch })
+  }
+}
+
+const appName = "app"
+const appResourceName = `app.ttl#${appName}`
+function buildNewApp(imageUploadContainerUrl) {
+  return buildThing(createThing({ name: appName }))
+    .addUrl(HYPE.imageUploadContainer, imageUploadContainerUrl)
+    .build()
+}
+
+function useHypeyApp() {
   const webId = useWebId()
-  const { logout, fetch } = useAuthentication()
+  const hypeyContainerUrl = useHypeyContainerUrl(webId)
+  const hypeyAppUrl = hypeyContainerUrl && `${hypeyContainerUrl}${appResourceName}`
+  const thingResult = useThing(hypeyAppUrl)
 
   const imageUploadContainerUrl = useImageUploadContainerUrl(webId)
-  useEffect(function () {
-    if (imageUploadContainerUrl) {
-      createContainerAt(imageUploadContainerUrl, { fetch })
-    }
-  }, [imageUploadContainerUrl])
+  const { fetch } = useAuthentication()
+  const initApp = useCallback(async function initApp() {
+    const newApp = buildNewApp(imageUploadContainerUrl)
+    await thingResult.save(newApp)
+    await initializeAppResources(hypeyContainerUrl, newApp, fetch)
+  }, [imageUploadContainerUrl, thingResult, fetch, hypeyContainerUrl])
 
-  const onSave = useCallback(function onSave(url) {
-    console.log("image url:", url)
-  }, [])
+  thingResult.app = thingResult.thing
+  thingResult.init = initApp
+  return thingResult
+}
+
+function buildNewCollage(backgroundImageUrl) {
+  return buildThing(createThing())
+    .addUrl(HYPE.backgroundImageUrl, backgroundImageUrl)
+    .build()
+}
+
+function NewCollageCreator() {
+  const webId = useWebId()
+  const { app, resource: appResource, saveResource: saveAppResource } = useHypeyApp()
+  const imageUploadContainerUrl = useImageUploadContainerUrl(webId)
+
+  const onSave = useCallback(async function onSave(url) {
+    const newCollage = buildNewCollage(url)
+    const newApp = addUrl(app, HYPE.hasCollages, newCollage)
+    await saveAppResource(
+      setThing(setThing(appResource, newApp), newCollage)
+    )
+  }, [app, appResource, saveAppResource])
   return (
+    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} />
+  )
+}
+
+function Collage({ url }) {
+  const { thing: collage } = useThing(url)
+  const backgroundImageUrl = collage && getUrl(collage, HYPE.backgroundImageUrl)
+  return (
+    <div>
+      <img src={backgroundImageUrl} alt="background image"/>
+    </div>
+  )
+}
+
+function isUrl(url){
+  try {
+    new URL(url)
+    return true
+  } catch (_){
+    return false
+  }
+}
+
+function Collages() {
+  const { app } = useHypeyApp()
+  const collageUrls = app && getUrlAll(app, HYPE.hasCollages)
+  // collage URLs are just their hash (ie, #12353254364) until the app is persisted, so make
+  // sure we don't try to render a collage until we have a real URL to work with
+  const persistedCollageUrls = collageUrls && collageUrls.filter(u => isUrl(u))
+  return (
+    <div>
+      {persistedCollageUrls && persistedCollageUrls.map(url =>
+      (
+        <Collage url={url} key={url} />
+      ))}
+    </div>
+  )
+}
+
+function LoggedIn() {
+  const { logout } = useAuthentication()
+  const { app, error, init: initApp } = useHypeyApp()
+
+  return app ? (
     <>
-      <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} />
+      {getUrl(app, HYPE.hasCollages) ? (
+        <Collages />
+      ) : (
+        <NewCollageCreator />
+      )}
       <button className="btn-inset btn-md" onClick={() => logout()}>
         log out
       </button>
     </>
+  ) : (
+    (error && (error.statusCode == 404)) ? (
+      <div className="flex flex-col items-center gap-4 text-white font-black font-4xl">
+        <h2>Oh you must be new here!</h2>
+        <h2>Are you ready to</h2>
+        <button className="font-black rounded-full shadow-md hover:shadow-2xl bg-fuchsia-400 font-6xl px-4 py-3 " onClick={initApp}>GET HYPEY?!</button>
+      </div>
+    ) : (
+      <Loader />
+    )
   )
 }
 
