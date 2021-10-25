@@ -1,6 +1,10 @@
-const HYPEY_PREFIX = "https://vocab.mysilio.com/hype#";
+const HYPEY_PREFIX = "https://vocab.mysilio.com/alpha/hype#";
 
-export const HYPE = ['Collage', 'hasCollages', 'hasElement', 'imageUploadContainer', 'backgroundImageUrl'].reduce((m, v) => {
+export const HYPE = [
+  'App', 'Collage', 'Element',
+  'hasCollages', 'hasElement', 'imageUploadContainer', 'backgroundImageUrl',
+  'imageUrl', 'elementX', 'elementY'
+].reduce((m, v) => {
   m[v] = `${HYPEY_PREFIX}${v}`
   return m
 }, {})

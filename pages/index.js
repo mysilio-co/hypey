@@ -1,31 +1,17 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import Head from 'next/head'
-import { useWebId, useThing, useLoggedIn, useAuthentication, useProfile } from 'swrlit'
+import { useRouter } from 'next/router'
+import { useWebId, useThing, useLoggedIn, useAuthentication } from 'swrlit'
 import {
-  getUrl, getUrlAll, addUrl, createContainerAt, buildThing, createThing, setThing
+  getUrl, getUrlAll, addUrl, createContainerAt,
+  setThing, getThing, asUrl
 } from '@inrupt/solid-client'
-import { WS } from '@inrupt/vocab-solid-common'
 
 import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
 import { HYPE } from '../vocab'
-
-const appPrefix = "hypey"
-
-export function useStorageContainer(webId) {
-  const { profile } = useProfile(webId)
-  return profile && getUrl(profile, WS.storage)
-}
-
-export function useHypeyContainerUrl(webId) {
-  const storageContainer = useStorageContainer(webId)
-  return storageContainer && `${storageContainer}public/${appPrefix}/`
-}
-
-export function useImageUploadContainerUrl(webId) {
-  const hypeyContainerUrl = useHypeyContainerUrl(webId)
-  return hypeyContainerUrl && `${hypeyContainerUrl}images/`
-}
+import { useHypeyContainerUrl, useImageUploadContainerUrl } from '../hooks/app'
+import { appResourceName, buildNewApp, buildNewCollage} from '../model/app'
 
 async function initializeAppResources(appContainerUrl, app, fetch) {
   const imageUploadContainerUrl = getUrl(app, HYPE.imageUploadContainer)
@@ -38,14 +24,6 @@ async function initializeAppResources(appContainerUrl, app, fetch) {
   if (imageUploadContainerUrl) {
     await createContainerAt(imageUploadContainerUrl, { fetch })
   }
-}
-
-const appName = "app"
-const appResourceName = `app.ttl#${appName}`
-function buildNewApp(imageUploadContainerUrl) {
-  return buildThing(createThing({ name: appName }))
-    .addUrl(HYPE.imageUploadContainer, imageUploadContainerUrl)
-    .build()
 }
 
 function useHypeyApp() {
@@ -67,24 +45,25 @@ function useHypeyApp() {
   return thingResult
 }
 
-function buildNewCollage(backgroundImageUrl) {
-  return buildThing(createThing())
-    .addUrl(HYPE.backgroundImageUrl, backgroundImageUrl)
-    .build()
+function collagePath(collage) {
+  return `/collages/${encodeURIComponent(asUrl(collage))}`
 }
 
 function NewCollageCreator() {
   const webId = useWebId()
   const { app, resource: appResource, saveResource: saveAppResource } = useHypeyApp()
   const imageUploadContainerUrl = useImageUploadContainerUrl(webId)
+  const router = useRouter()
 
   const onSave = useCallback(async function onSave(url) {
     const newCollage = buildNewCollage(url)
     const newApp = addUrl(app, HYPE.hasCollages, newCollage)
-    await saveAppResource(
+    const savedResource = await saveAppResource(
       setThing(setThing(appResource, newApp), newCollage)
     )
-  }, [app, appResource, saveAppResource])
+    const persistedCollage = getThing(savedResource, newCollage.url)
+    router.push(collagePath(persistedCollage))
+  }, [app, appResource, saveAppResource, router])
   return (
     <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} />
   )
@@ -95,16 +74,18 @@ function Collage({ url }) {
   const backgroundImageUrl = collage && getUrl(collage, HYPE.backgroundImageUrl)
   return (
     <div>
-      <img src={backgroundImageUrl} alt="background image"/>
+      {backgroundImageUrl && (
+        <img src={backgroundImageUrl} alt="background image" />
+      )}
     </div>
   )
 }
 
-function isUrl(url){
+function isUrl(url) {
   try {
     new URL(url)
     return true
-  } catch (_){
+  } catch (_) {
     return false
   }
 }
@@ -116,7 +97,7 @@ function Collages() {
   // sure we don't try to render a collage until we have a real URL to work with
   const persistedCollageUrls = collageUrls && collageUrls.filter(u => isUrl(u))
   return (
-    <div>
+    <div className="flex flex-col">
       {persistedCollageUrls && persistedCollageUrls.map(url =>
       (
         <Collage url={url} key={url} />
@@ -131,11 +112,11 @@ function LoggedIn() {
 
   return app ? (
     <>
-      {getUrl(app, HYPE.hasCollages) ? (
+      {getUrl(app, HYPE.hasCollages) && (
         <Collages />
-      ) : (
-        <NewCollageCreator />
       )}
+      <NewCollageCreator />
+
       <button className="btn-inset btn-md" onClick={() => logout()}>
         log out
       </button>
