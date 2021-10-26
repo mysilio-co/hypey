@@ -6,12 +6,13 @@ import {
   getUrl, getUrlAll, addUrl, createContainerAt,
   setThing, getThing, asUrl
 } from '@inrupt/solid-client'
+import Link from 'next/link'
 
 import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
 import { HYPE } from '../vocab'
 import { useHypeyContainerUrl, useImageUploadContainerUrl } from '../hooks/app'
-import { appResourceName, buildNewApp, buildNewCollage} from '../model/app'
+import { appResourceName, buildNewApp, buildNewCollage } from '../model/app'
 
 async function initializeAppResources(appContainerUrl, app, fetch) {
   const imageUploadContainerUrl = getUrl(app, HYPE.imageUploadContainer)
@@ -73,11 +74,15 @@ function Collage({ url }) {
   const { thing: collage } = useThing(url)
   const backgroundImageUrl = collage && getUrl(collage, HYPE.backgroundImageUrl)
   return (
-    <div>
-      {backgroundImageUrl && (
-        <img src={backgroundImageUrl} alt="background image" />
-      )}
-    </div>
+    <Link href={collage ? collagePath(collage) : ""}>
+      <a>
+        <div>
+          {backgroundImageUrl && (
+            <img src={backgroundImageUrl} alt="background image" />
+          )}
+        </div>
+      </a>
+    </Link>
   )
 }
 
