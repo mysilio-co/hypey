@@ -55,9 +55,9 @@ const uploadToContainerFromCanvas = (canvas, containerUri, type, name) => new Pr
     //    const scaledBlob = await newBlobReducer().toBlob(blob, {max: 600})
     //    console.log("scaled blob")
     try {
-      const savedFile = await saveFileInContainer(containerUri, blob, {contentType: type, fetch, slug: name})
+      const savedFile = await saveFileInContainer(containerUri, blob, { contentType: type, fetch, slug: name })
       resolve(savedFile)
-    } catch (e){
+    } catch (e) {
       console.log("image upload failed: ", e)
       reject(e)
     }
@@ -84,8 +84,9 @@ function UploadFileButton({ onFileChanged, ...rest }) {
   )
 }
 
-export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl }) {
+export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl, buttonContent = "pick an image" }) {
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [originalSrc, setOriginalSrc] = useState()
   const [previewSrc, setPreviewSrc] = useState()
   const [croppedCanvas, setCroppedCanvas] = useState()
@@ -111,9 +112,16 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
   }, [file])
 
   async function save() {
+    setSaving(true)
     const savedFile = await uploadToContainerFromCanvas(croppedCanvas, imageUploadContainerUrl, file.type, file.name)
     const newImageUrl = getSourceUrl(savedFile)
-    onSave && onSave(newImageUrl, file);
+    onSave && await onSave(newImageUrl, file);
+    setSaving(false)
+    setEditing(false)
+    setFile(null)
+    setOriginalSrc(null)
+    setPreviewSrc(null)
+    setCroppedCanvas(null)
   }
 
   return (
@@ -127,6 +135,8 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
             setEditing(false)
           }} />
 
+      ) : saving ? (
+        <Loader />
       ) : (
         <div className="flex flex-col h-96">
           {previewSrc && (
@@ -136,14 +146,14 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
           )}
           <div className="flex flex-row justify-center items-center flex-grow-0 p-6">
             <UploadFileButton className="btn-md btn-inset mr-3" onFileChanged={onFileChanged}>
-              pick an image
+              {buttonContent}
             </UploadFileButton>
             {croppedCanvas &&
               <>
                 <button className="btn-md btn-inset btn-square mr-3" onClick={() => setEditing(true)}>
                   edit
                 </button>
-                <button className="btn-md btn-inset btn-square mr-3" onClick={save}>
+                <button className="btn-md btn-inset btn-square mr-3" onClick={save} disabled={saving}>
                   save
                 </button>
               </>

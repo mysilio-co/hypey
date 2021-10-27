@@ -102,7 +102,9 @@ function Collage({ url }) {
         ))}
       </div>
       {editable && (
-        <ImageUploader onSave={onSaveNewElement} imageUploadContainerUrl={imageUploadContainerUrl} />
+        <ImageUploader onSave={onSaveNewElement}
+          imageUploadContainerUrl={imageUploadContainerUrl}
+          buttonContent="add image to collage" />
       )}
     </div>
   )
