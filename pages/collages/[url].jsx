@@ -2,14 +2,17 @@ import { useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useThing, useWebId } from 'swrlit'
 import { getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger, solidDatasetAsMarkdown } from '@inrupt/solid-client'
+import { DCTERMS } from '@inrupt/vocab-common-rdf'
 import { useDrag, useDrop } from 'react-dnd'
 
 import { HYPE } from '../../vocab'
 import ImageUploader from '../../components/ImageUploader'
 import { useImageUploadContainerUrl } from '../../hooks/app'
-import { buildNewElement } from '../../model/app'
+import { buildNewElement, isUrl } from '../../model/app'
 
-function Element({ url }) {
+
+
+function Element({ url, editable = false }) {
   const { thing: element, resource, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
   const x = element && getInteger(element, HYPE.elementX)
@@ -25,6 +28,7 @@ function Element({ url }) {
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging()
     }),
+    canDrag: () => editable,
     end: async function (item, monitor) {
       const { x: newX, y: newY } = monitor.getDropResult()
       if (newX && newY) {
@@ -41,7 +45,7 @@ function Element({ url }) {
         }
       }
     }
-  }), [saveElement, element])
+  }), [saveElement, element, editable])
   return (
     <img ref={drag} src={imageUrl} className="absolute" style={style} />
   )
@@ -54,8 +58,11 @@ function Collage({ url }) {
   const {
     thing: collage, resource: collageResource, saveResource: saveCollageResource
   } = useThing(url)
+  const authorWebId = collage && getUrl(collage, DCTERMS.creator)
+  const editable = webId && authorWebId && (webId === authorWebId)
 
   const onSaveNewElement = useCallback(function (elementUrl) {
+
     async function asyncSaveNewElement() {
       const element = buildNewElement(elementUrl)
       let newCollageResource = setThing(collageResource, element)
@@ -67,7 +74,9 @@ function Collage({ url }) {
 
   const backgroundImageUrl = collage && getUrl(collage, HYPE.backgroundImageUrl)
   const elementUrls = collage && getUrlAll(collage, HYPE.hasElement)
-
+  // element URLs are just their hash (ie, #12353254364) until the app is persisted, so make
+  // sure we don't try to render an element until we have a real URL to work with
+  const persistedElementUrls = elementUrls && elementUrls.filter(u => isUrl(u))
   const [, drop] = useDrop(
     () => ({
       accept: HYPE.Element,
@@ -80,11 +89,13 @@ function Collage({ url }) {
         {backgroundImageUrl && (
           <img src={backgroundImageUrl} alt="background image" />
         )}
-        {elementUrls && elementUrls.map(url => (
-          <Element url={url} key={url} />
+        {persistedElementUrls && persistedElementUrls.map(url => (
+          <Element url={url} key={url} editable={editable} />
         ))}
       </div>
-      <ImageUploader onSave={onSaveNewElement} imageUploadContainerUrl={imageUploadContainerUrl} />
+      {editable && (
+        <ImageUploader onSave={onSaveNewElement} imageUploadContainerUrl={imageUploadContainerUrl} />
+      )}
     </div>
   )
 }

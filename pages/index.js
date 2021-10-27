@@ -12,7 +12,7 @@ import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
 import { HYPE } from '../vocab'
 import { useHypeyContainerUrl, useImageUploadContainerUrl } from '../hooks/app'
-import { appResourceName, buildNewApp, buildNewCollage } from '../model/app'
+import { appResourceName, buildNewApp, buildNewCollage, isUrl } from '../model/app'
 
 async function initializeAppResources(appContainerUrl, app, fetch) {
   const imageUploadContainerUrl = getUrl(app, HYPE.imageUploadContainer)
@@ -57,7 +57,7 @@ function NewCollageCreator() {
   const router = useRouter()
 
   const onSave = useCallback(async function onSave(url) {
-    const newCollage = buildNewCollage(url)
+    const newCollage = buildNewCollage(url, webId)
     const newApp = addUrl(app, HYPE.hasCollages, newCollage)
     const savedResource = await saveAppResource(
       setThing(setThing(appResource, newApp), newCollage)
@@ -84,15 +84,6 @@ function Collage({ url }) {
       </a>
     </Link>
   )
-}
-
-function isUrl(url) {
-  try {
-    new URL(url)
-    return true
-  } catch (_) {
-    return false
-  }
 }
 
 function Collages() {

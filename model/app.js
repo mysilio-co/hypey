@@ -1,5 +1,5 @@
 import { buildThing, createThing } from '@inrupt/solid-client'
-import { RDF } from '@inrupt/vocab-common-rdf';
+import { RDF, DCTERMS } from '@inrupt/vocab-common-rdf';
 import { HYPE } from '../vocab'
 
 const appName = "app"
@@ -12,8 +12,9 @@ export function buildNewApp(imageUploadContainerUrl) {
     .build()
 }
 
-export function buildNewCollage(backgroundImageUrl) {
+export function buildNewCollage(backgroundImageUrl, authorWebId) {
   return buildThing(createThing())
+    .addUrl(DCTERMS.creator, authorWebId)
     .addUrl(RDF.type, HYPE.Collage)
     .addUrl(HYPE.backgroundImageUrl, backgroundImageUrl)
     .build()
@@ -24,6 +25,15 @@ export function buildNewElement(url) {
     .addUrl(RDF.type, HYPE.Element)
     .addUrl(HYPE.imageUrl, url)
     .build()
+}
+
+export function isUrl(url) {
+  try {
+    new URL(url)
+    return true
+  } catch (_) {
+    return false
+  }
 }
 
 
