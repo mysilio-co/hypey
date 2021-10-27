@@ -1,7 +1,10 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useThing, useWebId } from 'swrlit'
-import { getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger, solidDatasetAsMarkdown } from '@inrupt/solid-client'
+import {
+  getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger,
+  getDecimal, setDecimal, solidDatasetAsMarkdown
+} from '@inrupt/solid-client'
 import { DCTERMS } from '@inrupt/vocab-common-rdf'
 import { useDrag, useDrop } from 'react-dnd'
 
@@ -12,16 +15,17 @@ import { buildNewElement, isUrl } from '../../model/app'
 
 
 
-function Element({ url, editable = false }) {
+function Element({ url, editable = false, collageRef }) {
   const { thing: element, resource, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
-  const x = element && getInteger(element, HYPE.elementX)
-  const y = element && getInteger(element, HYPE.elementY)
+  const x = element && getDecimal(element, HYPE.elementX)
+  const y = element && getDecimal(element, HYPE.elementY)
+
 
   const style = {}
-  style.left = x || 0
-  style.top = y || 0
-  style.width = '100px';
+  style.left = x ? `${x}%` : 0
+  style.top = y ? `${y}%` : 0
+  style.width = `10%`;
 
   const [{ isDragging }, drag] = useDrag(() => ({
     type: HYPE.Element,
@@ -31,21 +35,24 @@ function Element({ url, editable = false }) {
     canDrag: () => editable,
     end: async function (item, monitor) {
       const { x: newX, y: newY } = monitor.getDropResult()
+
       if (newX && newY) {
         try {
-          await saveElement(
-            setInteger(
-              setInteger(element, HYPE.elementX, newX),
-              HYPE.elementY, newY
+          if (collageRef.current.clientWidth && collageRef.current.clientHeight) {
+            await saveElement(
+              setDecimal(
+                setDecimal(element, HYPE.elementX, (100.0 * newX / collageRef.current.clientWidth)),
+                HYPE.elementY, (100.0 * newY / collageRef.current.clientHeight)
+              )
             )
-          )
+          }
         } catch (_) {
           // if we encounter an error saving, revalidate to reset
           mutateElement()
         }
       }
     }
-  }), [saveElement, element, editable])
+  }), [saveElement, element, editable, collageRef])
   return (
     <img ref={drag} src={imageUrl} className="absolute" style={style} />
   )
@@ -83,14 +90,15 @@ function Collage({ url }) {
       drop: (_, monitor) => monitor.getSourceClientOffset()
     })
   )
+  const imageRef = useRef()
   return (
     <div className="flex flex-col">
       <div className="relative" ref={drop}>
         {backgroundImageUrl && (
-          <img src={backgroundImageUrl} alt="background image" />
+          <img src={backgroundImageUrl} alt="background image" ref={imageRef} />
         )}
         {persistedElementUrls && persistedElementUrls.map(url => (
-          <Element url={url} key={url} editable={editable} />
+          <Element url={url} key={url} editable={editable} collageRef={imageRef} />
         ))}
       </div>
       {editable && (
