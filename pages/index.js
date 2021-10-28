@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useWebId, useThing, useLoggedIn, useAuthentication } from 'swrlit'
@@ -133,6 +133,7 @@ function LoggedIn() {
 export default function Home() {
   const loggedIn = useLoggedIn()
   const { login } = useAuthentication()
+  const [idp, setIdp] = useState("")
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-teal-300">
@@ -152,10 +153,25 @@ export default function Home() {
             ) : (
               <>
                 <h1 className="text-fuchsia-400 text-center drop-shadow-2xl text-9xl mb-24 font-black">HYPEY</h1>
-                <button className="btn-inset btn-lg"
+                <button className="btn-inset btn-lg mb-2"
                   onClick={() => {
                     login({ oidcIssuer: "https://inrupt.net", redirectUrl: window.location.href, clientName: "Hypey" })
-                  }}>log in!</button>
+                  }}>log in with inrupt.net!</button>
+                <button className="btn-inset btn-lg mb-2"
+                  onClick={() => {
+                    login({ oidcIssuer: "https://mysilio.me", redirectUrl: window.location.href, clientName: "Hypey" })
+                  }}>log in with mysilio.me!</button>
+                <button className="btn-inset btn-lg mb-2"
+                  onClick={() => {
+                    login({ oidcIssuer: "https://solidcommunity.net", redirectUrl: window.location.href, clientName: "Hypey" })
+                  }}>log in with solidcommunity.net!</button>
+                <h3 className="mb-2">OR</h3>
+                <input className="mb-1 w-72 h-12 rounded-full text-lg px-4 focus:outline-none focus:ring focus:ring-teal-300"
+                  type="url" value={idp} onChange={e => setIdp(e.target.value)} />
+                <button className="btn-inset btn-lg mb-2"
+                  onClick={() => {
+                    login({ oidcIssuer: idp, redirectUrl: window.location.href, clientName: "Hypey" })
+                  }}>log in with a different identity provider!</button>
               </>
             )
           )
