@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useThing, useWebId } from 'swrlit'
 import {
@@ -13,26 +13,20 @@ import ImageUploader from '../../components/ImageUploader'
 import { useImageUploadContainerUrl } from '../../hooks/app'
 import { buildNewElement, isUrl } from '../../model/app'
 
-
-
 function Element({ url, editable = false, collageRef }) {
+  const [editing, setEditing] = useState(false)
   const { thing: element, resource, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
-  const x = element && getDecimal(element, HYPE.elementX)
-  const y = element && getDecimal(element, HYPE.elementY)
+  const x = element && (getDecimal(element, HYPE.elementX) || 0)
+  const y = element && (getDecimal(element, HYPE.elementY) || 0)
+  const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
 
-
-  const style = {}
-  style.left = x ? `${x}%` : 0
-  style.top = y ? `${y}%` : 0
-  style.width = `10%`;
-
-  const [{ isDragging }, drag] = useDrag(() => ({
+  const [_, drag] = useDrag(() => ({
     type: HYPE.Element,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging()
     }),
-    canDrag: () => editable,
+    canDrag: () => editable && editing,
     end: async function (item, monitor) {
       const { x: newX, y: newY } = monitor.getDropResult()
 
@@ -52,9 +46,57 @@ function Element({ url, editable = false, collageRef }) {
         }
       }
     }
-  }), [saveElement, element, editable, collageRef])
+  }), [saveElement, element, editable, editing, collageRef])
+
+  const [resizeDragStart, setResizeDragStart] = useState()
+  const [resizeDragWidth, setResizeDragWidth] = useState()
+  const resizeOnDrag = useCallback((e) => {
+    const newResizeDragWidth = (100.0 * (e.clientX - resizeDragStart) / collageRef.current.clientWidth)
+    if ((newResizeDragWidth + width) > 0) {
+      setResizeDragWidth(newResizeDragWidth)
+    }
+    e.stopPropagation()
+  }, [resizeDragStart, collageRef, width])
+  const resizeOnDragStart = useCallback((e) => {
+    setResizeDragStart(e.clientX)
+    e.stopPropagation()
+  }, [])
+  const resizeOnDragEnd = useCallback(
+    async (e) => {
+      const newWidth = width + resizeDragWidth
+      setResizeDragWidth(null)
+      if (newWidth > 0) {
+        await saveElement(
+          setDecimal(element, HYPE.elementWidth, newWidth),
+        )
+      }
+      e.stopPropagation()
+    }, [element, resizeDragWidth, saveElement, width]
+  )
+  const style = {}
+  if (element) {
+    style.left = `${x}%`
+    style.top = `${y}%`
+    style.width = `${width + (resizeDragWidth || 0)}%`;
+  }
+
   return (
-    <img ref={drag} src={imageUrl} className="absolute" style={style} />
+    <div ref={drag} className={`${editing ? 'shadow-2xl opacity-70' : ''} absolute`} style={style} onClick={() => editable && setEditing(true)}>
+      <img src={imageUrl} className="object-cover" alt="collage element" />
+      {editing && (
+        <div className="absolute top-0 -right-4 px-2 flex flex-col bg-black bg-opacity-50">
+          <button onClick={(e) => { e.stopPropagation(); setEditing(false); }}>
+            x
+          </button>
+          <div draggable
+            onDragStart={resizeOnDragStart}
+            onDrag={resizeOnDrag}
+            onDragEnd={resizeOnDragEnd}>
+            &gt;
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
