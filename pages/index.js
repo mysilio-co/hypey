@@ -66,7 +66,7 @@ function NewCollageCreator() {
     router.push(collagePath(persistedCollage))
   }, [app, appResource, saveAppResource, router])
   return (
-    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="pick a background image" />
+    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="pick a background image for a new collage" />
   )
 }
 
