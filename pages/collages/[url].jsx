@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useThing, useWebId } from 'swrlit'
 import {
   getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger,
-  getDecimal, setDecimal, solidDatasetAsMarkdown
+  getDecimal, setDecimal, solidDatasetAsMarkdown, setUrl, removeUrl
 } from '@inrupt/solid-client'
 import { DCTERMS } from '@inrupt/vocab-common-rdf'
 import { useDrag, useDrop } from 'react-dnd'
@@ -20,6 +20,7 @@ function Element({ url, editable = false, collageRef }) {
   const x = element && (getDecimal(element, HYPE.elementX) || 0)
   const y = element && (getDecimal(element, HYPE.elementY) || 0)
   const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
+  const linksTo = getUrl(element, HYPE.linksTo)
 
   const [_, drag] = useDrag(() => ({
     type: HYPE.Element,
@@ -80,6 +81,17 @@ function Element({ url, editable = false, collageRef }) {
     style.width = `${width + (resizeDragWidth || 0)}%`;
   }
 
+  const setLink = useCallback(async () => {
+    const url = prompt("link this element to what URL?", linksTo || '')
+    if (url) {
+      await saveElement(
+        setUrl(element, HYPE.linksTo, url),
+      )
+    } else {
+      await saveElement(removeUrl(element, HYPE.linksTo))
+    }
+  }, [saveElement, element, linksTo])
+
   return (
     <div ref={drag} className={`${editing ? 'shadow-2xl opacity-70' : ''} absolute`} style={style} onClick={() => editable && setEditing(true)}>
       <img src={imageUrl} className="object-cover" alt="collage element" />
@@ -94,6 +106,9 @@ function Element({ url, editable = false, collageRef }) {
             onDragEnd={resizeOnDragEnd}>
             &gt;
           </div>
+          <button onClick={setLink}>
+            l
+          </button>
         </div>
       )}
     </div>
