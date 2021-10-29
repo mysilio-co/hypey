@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
+import Link from 'next/link'
 import { useThing, useWebId } from 'swrlit'
 import {
   getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger,
@@ -13,9 +14,40 @@ import ImageUploader from '../../components/ImageUploader'
 import { useImageUploadContainerUrl } from '../../hooks/app'
 import { buildNewElement, isUrl } from '../../model/app'
 
-function Element({ url, editable = false, collageRef }) {
-  const [editing, setEditing] = useState(false)
-  const { thing: element, resource, save: saveElement, mutate: mutateElement } = useThing(url)
+function elementStyle(element) {
+  const x = element && (getDecimal(element, HYPE.elementX) || 0)
+  const y = element && (getDecimal(element, HYPE.elementY) || 0)
+  const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
+  const style = {}
+  if (element) {
+    style.left = `${x}%`
+    style.top = `${y}%`
+    style.width = `${width}%`;
+  }
+  return style
+}
+
+function Element({ url, collageRef }) {
+  const { thing: element, save: saveElement, mutate: mutateElement } = useThing(url)
+  const imageUrl = element && getUrl(element, HYPE.imageUrl)
+  const linksTo = getUrl(element, HYPE.linksTo)
+
+  const style = elementStyle(element)
+  console.log(style)
+
+  return (
+    <div className="absolute" style={style}>
+      <Link href={linksTo || "#"}>
+        <a>
+          <img src={imageUrl} className="object-cover" alt="collage element" />
+        </a>
+      </Link>
+    </div>
+  )
+}
+
+function EditableElement({ url, collageRef }) {
+  const { thing: element, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
   const x = element && (getDecimal(element, HYPE.elementX) || 0)
   const y = element && (getDecimal(element, HYPE.elementY) || 0)
@@ -27,7 +59,7 @@ function Element({ url, editable = false, collageRef }) {
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging()
     }),
-    canDrag: () => editable && editing,
+    canDrag: () => true,
     end: async function (item, monitor) {
       const { x: newX, y: newY } = monitor.getDropResult()
 
@@ -47,7 +79,7 @@ function Element({ url, editable = false, collageRef }) {
         }
       }
     }
-  }), [saveElement, element, editable, editing, collageRef])
+  }), [saveElement, element, collageRef])
 
   const [resizeDragStart, setResizeDragStart] = useState()
   const [resizeDragWidth, setResizeDragWidth] = useState()
@@ -74,10 +106,8 @@ function Element({ url, editable = false, collageRef }) {
       e.stopPropagation()
     }, [element, resizeDragWidth, saveElement, width]
   )
-  const style = {}
-  if (element) {
-    style.left = `${x}%`
-    style.top = `${y}%`
+  const style = element && elementStyle(element)
+  if (style) {
     style.width = `${width + (resizeDragWidth || 0)}%`;
   }
 
@@ -93,24 +123,19 @@ function Element({ url, editable = false, collageRef }) {
   }, [saveElement, element, linksTo])
 
   return (
-    <div ref={drag} className={`${editing ? 'shadow-2xl opacity-70' : ''} absolute`} style={style} onClick={() => editable && setEditing(true)}>
+    <div ref={drag} className={`shadow-2xl opacity-70 absolute`} style={style}>
       <img src={imageUrl} className="object-cover" alt="collage element" />
-      {editing && (
-        <div className="absolute top-0 -right-4 px-2 flex flex-col bg-black bg-opacity-50">
-          <button onClick={(e) => { e.stopPropagation(); setEditing(false); }}>
-            x
-          </button>
-          <div draggable
-            onDragStart={resizeOnDragStart}
-            onDrag={resizeOnDrag}
-            onDragEnd={resizeOnDragEnd}>
-            &gt;
-          </div>
-          <button onClick={setLink}>
-            l
-          </button>
+      <div className="absolute top-0 -right-6 px-2 flex flex-col bg-black bg-opacity-50">
+        <div draggable
+          onDragStart={resizeOnDragStart}
+          onDrag={resizeOnDrag}
+          onDragEnd={resizeOnDragEnd}>
+          &gt;
         </div>
-      )}
+        <button onClick={setLink}>
+          l
+        </button>
+      </div>
     </div>
   )
 }
@@ -118,7 +143,7 @@ function Element({ url, editable = false, collageRef }) {
 function Collage({ url }) {
   const webId = useWebId()
   const imageUploadContainerUrl = useImageUploadContainerUrl(webId)
-
+  const [editing, setEditing] = useState(false)
   const {
     thing: collage, resource: collageResource, saveResource: saveCollageResource
   } = useThing(url)
@@ -155,10 +180,27 @@ function Collage({ url }) {
           <img src={backgroundImageUrl} alt="background image" ref={imageRef} />
         )}
         {persistedElementUrls && persistedElementUrls.map(url => (
-          <Element url={url} key={url} editable={editable} collageRef={imageRef} />
+          editing ? (
+            <EditableElement url={url} key={url} collageRef={imageRef} />
+          ) : (
+            <Element url={url} key={url} />
+          )
         ))}
       </div>
-      {editable && (
+      {editing ? (
+        <button className="btn-md btn-inset btn-square"
+          onClick={() => setEditing(false)}>
+          preview collage
+        </button>
+      ) : (
+        editable && (
+          <button className="btn-md btn-inset btn-square"
+            onClick={() => setEditing(true)}>
+            edit collage
+          </button>
+        )
+      )}
+      {editing && (
         <ImageUploader onSave={onSaveNewElement}
           imageUploadContainerUrl={imageUploadContainerUrl}
           buttonContent="add image to collage" />
