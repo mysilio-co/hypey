@@ -4,10 +4,12 @@ import Link from 'next/link'
 import { useThing, useWebId } from 'swrlit'
 import {
   getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger,
-  getDecimal, setDecimal, solidDatasetAsMarkdown, setUrl, removeUrl
+  getDecimal, setDecimal, removeThing, solidDatasetAsMarkdown, setUrl, removeUrl
 } from '@inrupt/solid-client'
 import { DCTERMS } from '@inrupt/vocab-common-rdf'
 import { useDrag, useDrop } from 'react-dnd'
+import { faLink, faArrowsAltH, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { HYPE } from '../../vocab'
 import ImageUploader from '../../components/ImageUploader'
@@ -27,13 +29,12 @@ function elementStyle(element) {
   return style
 }
 
-function Element({ url, collageRef }) {
-  const { thing: element, save: saveElement, mutate: mutateElement } = useThing(url)
+function Element({ url }) {
+  const { thing: element } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
-  const linksTo = getUrl(element, HYPE.linksTo)
+  const linksTo = element && getUrl(element, HYPE.linksTo)
 
   const style = elementStyle(element)
-  console.log(style)
 
   return (
     <div className="absolute" style={style}>
@@ -46,11 +47,11 @@ function Element({ url, collageRef }) {
   )
 }
 
-function EditableElement({ url, collageRef }) {
+function EditableElement({ url, collageRef, deleteElement }) {
   const { thing: element, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
   const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
-  const linksTo = getUrl(element, HYPE.linksTo)
+  const linksTo = element && getUrl(element, HYPE.linksTo)
 
   const [_, drag] = useDrag(() => ({
     type: HYPE.Element,
@@ -115,23 +116,26 @@ function EditableElement({ url, collageRef }) {
       await saveElement(
         setUrl(element, HYPE.linksTo, url),
       )
-    } else {
-      await saveElement(removeUrl(element, HYPE.linksTo))
+    } else if (linksTo) {
+      await saveElement(removeUrl(element, HYPE.linksTo, linksTo))
     }
   }, [saveElement, element, linksTo])
 
   return (
     <div ref={drag} className={`shadow-2xl opacity-70 absolute`} style={style}>
       <img src={imageUrl} className="object-cover" alt="collage element" />
-      <div className="absolute top-0 -right-6 px-2 flex flex-col bg-black bg-opacity-50">
-        <div draggable
+      <div className="absolute top-0 -right-8 px-2 flex flex-col bg-white bg-opacity-80">
+        <div draggable className="cursor-move mb-2"
           onDragStart={resizeOnDragStart}
           onDrag={resizeOnDrag}
           onDragEnd={resizeOnDragEnd}>
-          &gt;
+          <FontAwesomeIcon icon={faArrowsAltH} />
         </div>
-        <button onClick={setLink}>
-          l
+        <button onClick={setLink} className="mb-2">
+          <FontAwesomeIcon icon={faLink} />
+        </button>
+        <button onClick={() => deleteElement(element)}>
+          <FontAwesomeIcon icon={faTrash} />
         </button>
       </div>
     </div>
@@ -159,6 +163,18 @@ function Collage({ url }) {
     asyncSaveNewElement()
   }, [collage, collageResource, saveCollageResource])
 
+  const deleteElement = useCallback(async (element) => {
+    const confirmed = confirm(`are you sure you want to delete this element?`)
+    if (confirmed) {
+      await saveCollageResource(
+        setThing(
+          removeThing(collageResource, element),
+          removeUrl(collage, HYPE.hasElement, element)
+        )
+      )
+    }
+  }, [collage, collageResource, saveCollageResource])
+
   const backgroundImageUrl = collage && getUrl(collage, HYPE.backgroundImageUrl)
   const elementUrls = collage && getUrlAll(collage, HYPE.hasElement)
   // element URLs are just their hash (ie, #12353254364) until the app is persisted, so make
@@ -179,7 +195,7 @@ function Collage({ url }) {
         )}
         {persistedElementUrls && persistedElementUrls.map(url => (
           editing ? (
-            <EditableElement url={url} key={url} collageRef={imageRef} />
+            <EditableElement url={url} key={url} collageRef={imageRef} deleteElement={deleteElement} />
           ) : (
             <Element url={url} key={url} />
           )
