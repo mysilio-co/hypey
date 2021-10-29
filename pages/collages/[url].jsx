@@ -49,8 +49,6 @@ function Element({ url, collageRef }) {
 function EditableElement({ url, collageRef }) {
   const { thing: element, save: saveElement, mutate: mutateElement } = useThing(url)
   const imageUrl = element && getUrl(element, HYPE.imageUrl)
-  const x = element && (getDecimal(element, HYPE.elementX) || 0)
-  const y = element && (getDecimal(element, HYPE.elementY) || 0)
   const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
   const linksTo = getUrl(element, HYPE.linksTo)
 
