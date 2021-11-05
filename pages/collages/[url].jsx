@@ -202,13 +202,13 @@ function Collage({ url }) {
         ))}
       </div>
       {editing ? (
-        <button className="btn-md btn-inset btn-square"
+        <button className="btn-md btn-floating btn-square"
           onClick={() => setEditing(false)}>
           preview collage
         </button>
       ) : (
         editable && (
-          <button className="btn-md btn-inset btn-square"
+          <button className="btn-md btn-floating btn-square"
             onClick={() => setEditing(true)}>
             edit collage
           </button>

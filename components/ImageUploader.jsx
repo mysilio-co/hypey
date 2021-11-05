@@ -145,15 +145,15 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
             </div>
           )}
           <div className="flex flex-row justify-center items-center flex-grow-0 p-6">
-            <UploadFileButton className="btn-md btn-inset mr-3" onFileChanged={onFileChanged}>
+            <UploadFileButton className="btn-md btn-transparent mr-3" onFileChanged={onFileChanged}>
               {buttonContent}
             </UploadFileButton>
             {croppedCanvas &&
               <>
-                <button className="btn-md btn-inset btn-square mr-3" onClick={() => setEditing(true)}>
+                <button className="btn-md btn-floating btn-square mr-3" onClick={() => setEditing(true)}>
                   edit
                 </button>
-                <button className="btn-md btn-inset btn-square mr-3" onClick={save} disabled={saving}>
+                <button className="btn-md btn-floating btn-square mr-3" onClick={save} disabled={saving}>
                   save
                 </button>
               </>

@@ -3,8 +3,17 @@
 @tailwind utilities;
 
 @layer utilities {
-  .btn-inset {
-    @apply rounded-full bg-teal-400 text-white font-bold shadow-inner hover:shadow-none;
+
+  .bg-standard-gradient {
+    @apply bg-gradient-to-tr from-my-purple via-my-ocean to-my-green;
+  }
+
+  .bg-gradient-header {
+    @apply bg-gradient-to-r from-my-purple via-my-ocean to-my-green;
+  }
+
+  .btn-floating {
+    @apply font-mono bg-standard-gradient text-white font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:-translate-x-0.5;
   }
 
   .btn-xl {

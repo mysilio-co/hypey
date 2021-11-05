@@ -7,7 +7,17 @@ module.exports = {
     extend: {
       colors: {
         teal: colors.teal,
-        fuchsia: colors.fuchsia
+        fuchsia: colors.fuchsia,
+        'my-purple': '#944c7d',
+        'my-orange': '#f27a22',
+        'my-yellow': '#f2b822',
+        'my-green': '#0e90a3',
+        'my-ocean': '#2d6da6',
+        'my-ember': '#d44d51'
+      },
+      fontFamily: {
+        logo: ['Paytone One', 'sans-serif'],
+        mono: ['Inconsolata', 'monospace']
       }
     },
 
