@@ -115,10 +115,6 @@ function NewCollageCreatorDialog(props) {
           <Dialog.Title className="text-4xl">
             Create a new collage
           </Dialog.Title>
-          <Dialog.Description className="text-xl">
-            First, you'll need to
-          </Dialog.Description>
-
           <NewCollageCreator />
         </div>
       </div>
