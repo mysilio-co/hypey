@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { fetch } from '@inrupt/solid-client-authn-browser'
 import { saveFileInContainer, getSourceUrl } from '@inrupt/solid-client'
 import Cropper from 'react-cropper';
+import { faRedoAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 //import newBlobReducer from 'image-blob-reduce'
 
 import { Loader } from './elements';
@@ -26,19 +28,19 @@ const ImageEditingModule = ({ src, onSave, onClose, ...props }) => {
         className="h-96"
       />
       <div className="flex flex-row p-6 justify-center">
-        <button className="btn-inset btn-md mr-3" onClick={() => {
+        <button className="btn-floating btn-md mr-3" onClick={() => {
           cropperRef.current.cropper.rotate(90)
         }}>
-          rotate
+          <FontAwesomeIcon icon={faRedoAlt} />
         </button>
         {saving ? (
           <Loader />
         ) : (
           <>
-            <button className="btn-inset btn-md mr-3" onClick={save}>
+            <button className="btn-floating btn-md mr-3" onClick={save}>
               done editing
             </button>
-            <button className="btn-inset btn-md" onClick={onClose}>
+            <button className="btn-floating btn-md" onClick={onClose}>
               cancel
             </button>
           </>
@@ -134,7 +136,6 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
             setCroppedCanvas(canvas)
             setEditing(false)
           }} />
-
       ) : saving ? (
         <Loader />
       ) : (
@@ -145,15 +146,15 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
             </div>
           )}
           <div className="flex flex-row justify-center items-center flex-grow-0 p-6">
-            <UploadFileButton className="btn-md btn-inset mr-3" onFileChanged={onFileChanged}>
+            <UploadFileButton className="btn-md btn-floating mr-3" onFileChanged={onFileChanged}>
               {buttonContent}
             </UploadFileButton>
             {croppedCanvas &&
               <>
-                <button className="btn-md btn-inset btn-square mr-3" onClick={() => setEditing(true)}>
+                <button className="btn-md btn-floating btn-square mr-3" onClick={() => setEditing(true)}>
                   edit
                 </button>
-                <button className="btn-md btn-inset btn-square mr-3" onClick={save} disabled={saving}>
+                <button className="btn-md btn-floating btn-square mr-3" onClick={save} disabled={saving}>
                   save
                 </button>
               </>

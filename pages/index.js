@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react'
-import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { useWebId, useThing, useLoggedIn, useAuthentication } from 'swrlit'
 import {
@@ -7,6 +6,7 @@ import {
   setThing, getThing, asUrl
 } from '@inrupt/solid-client'
 import Link from 'next/link'
+import { Dialog } from '@headlessui/react'
 
 import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
@@ -64,9 +64,9 @@ function NewCollageCreator() {
     )
     const persistedCollage = getThing(savedResource, newCollage.url)
     router.push(collagePath(persistedCollage))
-  }, [app, appResource, saveAppResource, router])
+  }, [webId, app, appResource, saveAppResource, router])
   return (
-    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="pick a background image for a new collage" />
+    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="pick background image" />
   )
 }
 
@@ -76,7 +76,7 @@ function Collage({ url }) {
   return (
     <Link href={collage ? collagePath(collage) : ""}>
       <a>
-        <div>
+        <div className="floating">
           {backgroundImageUrl && (
             <img src={backgroundImageUrl} alt="background image" />
           )}
@@ -93,7 +93,7 @@ function Collages() {
   // sure we don't try to render a collage until we have a real URL to work with
   const persistedCollageUrls = collageUrls && collageUrls.filter(u => isUrl(u))
   return (
-    <div className="flex flex-col">
+    <div className="grid grid-cols-1 sm:grid-cols-2 p-8">
       {persistedCollageUrls && persistedCollageUrls.map(url =>
       (
         <Collage url={url} key={url} />
@@ -102,27 +102,50 @@ function Collages() {
   )
 }
 
+function NewCollageCreatorDialog(props) {
+  return (
+    <Dialog
+      {...props}
+      className="fixed z-10 inset-0 overflow-y-auto"
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+
+        <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
+          <Dialog.Title className="text-4xl">
+            Create a new collage
+          </Dialog.Title>
+          <NewCollageCreator />
+        </div>
+      </div>
+    </Dialog>
+  )
+}
+
 function LoggedIn() {
   const { logout } = useAuthentication()
   const { app, error, init: initApp } = useHypeyApp()
-
+  const [dialogOpen, setDialogOpen] = useState(false)
   return app ? (
     <>
+      <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
+        <button className="btn-md btn-header" onClick={() => setDialogOpen(true)}>create new collage</button>
+        <NewCollageCreatorDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        <button className="btn-md btn-header" onClick={() => logout()}>
+          log out
+        </button>
+      </div>
       {getUrl(app, HYPE.hasCollages) && (
         <Collages />
       )}
-      <NewCollageCreator />
 
-      <button className="btn-inset btn-md" onClick={() => logout()}>
-        log out
-      </button>
     </>
   ) : (
     (error && (error.statusCode == 404)) ? (
       <div className="flex flex-col items-center gap-4 text-white font-black font-4xl">
         <h2>Oh you must be new here!</h2>
         <h2>Are you ready to</h2>
-        <button className="font-black rounded-full shadow-md hover:shadow-2xl bg-fuchsia-400 font-6xl px-4 py-3 " onClick={initApp}>GET HYPEY?!</button>
+        <button className="btn-floating font-6xl px-4 py-3 " onClick={initApp}>GET HYPEY?!</button>
       </div>
     ) : (
       <Loader />
@@ -134,16 +157,11 @@ export default function Home() {
   const loggedIn = useLoggedIn()
   const { login } = useAuthentication()
   const [idp, setIdp] = useState("")
+  const error = isUrl(idp) && "Must be a valid URL."
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-teal-300">
-      <Head>
-        <title>hypey</title>
-        <meta name="description" content="get hypey" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className="flex flex-col justify-center items-center">
+    <div className="flex flex-col items-center min-h-screen bg-gray-100">
+      <main className="flex flex-col items-center">
         {
           (loggedIn === undefined) ? (
             <Loader />
@@ -152,23 +170,26 @@ export default function Home() {
               <LoggedIn />
             ) : (
               <>
-                <h1 className="text-fuchsia-400 text-center drop-shadow-2xl text-9xl mb-24 font-black">HYPEY</h1>
-                <button className="btn-inset btn-lg mb-2"
+                <h1 className="bg-standard-gradient text-transparent bg-clip-text text-9xl pb-8 mb-16 font-black font-logo">
+                  hypey
+                </h1>
+                <button className="btn-floating btn-lg mb-2"
                   onClick={() => {
                     login({ oidcIssuer: "https://inrupt.net", redirectUrl: window.location.href, clientName: "Hypey" })
                   }}>log in with inrupt.net!</button>
-                <button className="btn-inset btn-lg mb-2"
+                <button className="btn-floating btn-lg mb-2"
                   onClick={() => {
                     login({ oidcIssuer: "https://mysilio.me", redirectUrl: window.location.href, clientName: "Hypey" })
                   }}>log in with mysilio.me!</button>
-                <button className="btn-inset btn-lg mb-2"
+                <button className="btn-floating btn-lg mb-2"
                   onClick={() => {
                     login({ oidcIssuer: "https://solidcommunity.net", redirectUrl: window.location.href, clientName: "Hypey" })
                   }}>log in with solidcommunity.net!</button>
-                <h3 className="mb-2">OR</h3>
-                <input className="mb-1 w-72 h-12 rounded-full text-lg px-4 focus:outline-none focus:ring focus:ring-teal-300"
+                <h3 className="mb-2 font-mono font-bold text-2xl">OR</h3>
+                <input className="mb-1 w-96 h-12 text-lg px-4 focus:outline-none focus:ring focus:ring-my-ocean mb-2"
                   type="url" value={idp} onChange={e => setIdp(e.target.value)} />
-                <button className="btn-inset btn-lg mb-2"
+                {error && <span className="color-my-ember">{error}</span>}
+                <button className="btn-floating btn-lg mb-2 w-96"
                   onClick={() => {
                     login({ oidcIssuer: idp, redirectUrl: window.location.href, clientName: "Hypey" })
                   }}>log in with a different identity provider!</button>
