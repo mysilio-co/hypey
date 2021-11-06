@@ -6,6 +6,7 @@ import {
   setThing, getThing, asUrl
 } from '@inrupt/solid-client'
 import Link from 'next/link'
+import { Dialog } from '@headlessui/react'
 
 import { Loader } from '../components/elements'
 import ImageUploader from '../components/ImageUploader'
@@ -65,7 +66,7 @@ function NewCollageCreator() {
     router.push(collagePath(persistedCollage))
   }, [webId, app, appResource, saveAppResource, router])
   return (
-    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="create new collage" />
+    <ImageUploader onSave={onSave} imageUploadContainerUrl={imageUploadContainerUrl} buttonContent="pick background image" />
   )
 }
 
@@ -75,7 +76,7 @@ function Collage({ url }) {
   return (
     <Link href={collage ? collagePath(collage) : ""}>
       <a>
-        <div>
+        <div className="floating">
           {backgroundImageUrl && (
             <img src={backgroundImageUrl} alt="background image" />
           )}
@@ -92,7 +93,7 @@ function Collages() {
   // sure we don't try to render a collage until we have a real URL to work with
   const persistedCollageUrls = collageUrls && collageUrls.filter(u => isUrl(u))
   return (
-    <div className="grid grid-cols-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 p-8">
       {persistedCollageUrls && persistedCollageUrls.map(url =>
       (
         <Collage url={url} key={url} />
@@ -101,19 +102,43 @@ function Collages() {
   )
 }
 
+function NewCollageCreatorDialog(props) {
+  return (
+    <Dialog
+      {...props}
+      className="fixed z-10 inset-0 overflow-y-auto"
+    >
+      <div className="flex items-center justify-center min-h-screen">
+        <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+
+        <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
+          <Dialog.Title className="text-4xl">
+            Create a new collage
+          </Dialog.Title>
+          <Dialog.Description className="text-xl">
+            First, you'll need to
+          </Dialog.Description>
+
+          <NewCollageCreator />
+        </div>
+      </div>
+    </Dialog>
+  )
+}
+
 function LoggedIn() {
   const { logout } = useAuthentication()
   const { app, error, init: initApp } = useHypeyApp()
-
+  const [dialogOpen, setDialogOpen] = useState(false)
   return app ? (
     <>
-    <div className="w-full bg-gradient-header flex flex-row justify-between">
-
-      <NewCollageCreator />
-      <button className="btn-md" onClick={() => logout()}>
-        log out
-      </button>
-    </div>
+      <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
+        <button className="btn-md btn-header" onClick={() => setDialogOpen(true)}>create new collage</button>
+        <NewCollageCreatorDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        <button className="btn-md btn-header" onClick={() => logout()}>
+          log out
+        </button>
+      </div>
       {getUrl(app, HYPE.hasCollages) && (
         <Collages />
       )}
@@ -139,8 +164,8 @@ export default function Home() {
   const error = isUrl(idp) && "Must be a valid URL."
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-100">
-      <main className="flex flex-col justify-center items-center">
+    <div className="flex flex-col items-center min-h-screen bg-gray-100">
+      <main className="flex flex-col items-center">
         {
           (loggedIn === undefined) ? (
             <Loader />

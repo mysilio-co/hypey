@@ -10,6 +10,7 @@ import { DCTERMS } from '@inrupt/vocab-common-rdf'
 import { useDrag, useDrop } from 'react-dnd'
 import { faLink, faArrowsAltH, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Dialog } from '@headlessui/react'
 
 import { HYPE } from '../../vocab'
 import ImageUploader from '../../components/ImageUploader'
@@ -142,26 +143,22 @@ function EditableElement({ url, collageRef, deleteElement }) {
   )
 }
 
-function Collage({ url }) {
+function Collage({ url, editing, adding, onDoneAdding }) {
   const webId = useWebId()
   const imageUploadContainerUrl = useImageUploadContainerUrl(webId)
-  const [editing, setEditing] = useState(false)
   const {
     thing: collage, resource: collageResource, saveResource: saveCollageResource
   } = useThing(url)
-  const authorWebId = collage && getUrl(collage, DCTERMS.creator)
-  const editable = webId && authorWebId && (webId === authorWebId)
-
   const onSaveNewElement = useCallback(function (elementUrl) {
-
     async function asyncSaveNewElement() {
       const element = buildNewElement(elementUrl)
       let newCollageResource = setThing(collageResource, element)
       newCollageResource = setThing(newCollageResource, addUrl(collage, HYPE.hasElement, element))
       await saveCollageResource(newCollageResource)
+      onDoneAdding()
     }
     asyncSaveNewElement()
-  }, [collage, collageResource, saveCollageResource])
+  }, [collage, collageResource, saveCollageResource, onDoneAdding])
 
   const deleteElement = useCallback(async (element) => {
     const confirmed = confirm(`are you sure you want to delete this element?`)
@@ -189,9 +186,10 @@ function Collage({ url }) {
   const imageRef = useRef()
   return (
     <div className="flex flex-col">
-      <div className="relative" ref={drop}>
+      <div className="relative" ref={drop} style={{backgroundImage: `url(${backgroundImageUrl})`}}>
         {backgroundImageUrl && (
-          <img src={backgroundImageUrl} alt="background image" ref={imageRef} />
+          <img src={backgroundImageUrl} alt="background image" ref={imageRef}
+          className="w-full" />
         )}
         {persistedElementUrls && persistedElementUrls.map(url => (
           editing ? (
@@ -201,32 +199,65 @@ function Collage({ url }) {
           )
         ))}
       </div>
-      {editing ? (
-        <button className="btn-md btn-floating btn-square"
-          onClick={() => setEditing(false)}>
-          preview collage
-        </button>
-      ) : (
-        editable && (
-          <button className="btn-md btn-floating btn-square"
-            onClick={() => setEditing(true)}>
-            edit collage
-          </button>
-        )
-      )}
-      {editing && (
-        <ImageUploader onSave={onSaveNewElement}
-          imageUploadContainerUrl={imageUploadContainerUrl}
-          buttonContent="add image to collage" />
-      )}
+
+      <Dialog open={adding} onClose={onDoneAdding}
+
+        className="fixed z-10 inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen">
+          <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+
+          <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
+            <Dialog.Title className="text-4xl">
+              Add a new element to this collage
+            </Dialog.Title>
+
+            <ImageUploader onSave={onSaveNewElement}
+              imageUploadContainerUrl={imageUploadContainerUrl}
+              buttonContent="pick an image" />
+
+          </div>
+        </div>
+      </Dialog>
     </div>
   )
 }
 
 export default function CollagePage() {
+  const webId = useWebId()
   const { query: { url } } = useRouter()
   const collageUrl = url && decodeURIComponent(url)
+  const { thing: collage } = useThing(collageUrl)
+  const authorWebId = collage && getUrl(collage, DCTERMS.creator)
+  const editable = webId && authorWebId && (webId === authorWebId)
+  const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
+
   return (
-    <Collage url={collageUrl} />
+    <div className="flex flex-col w-screen h-screen">
+      <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
+        <Link href="/"><a className="btn-md btn-header">dashboard</a></Link>
+        {editing ? (
+          <div className="flex flex-row">
+            <button className="btn-md btn-header"
+              onClick={() => setEditing(false)}>
+              preview collage
+            </button>
+            <button className="btn-md btn-header"
+              onClick={() => setAdding(true)}>
+              add image to collage
+            </button>
+          </div>
+        ) : (
+          editable && (
+            <button className="btn-md btn-header"
+              onClick={() => setEditing(true)}>
+              edit collage
+            </button>
+          )
+        )}
+      </div>
+      <Collage url={collageUrl} editing={editing} adding={adding} onDoneAdding={() => setAdding(false)} />
+    </div>
   )
 }

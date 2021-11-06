@@ -12,8 +12,12 @@
     @apply bg-gradient-to-r from-my-purple via-my-ocean to-my-green;
   }
 
+  .floating {
+    @apply shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:-translate-x-0.5
+  }
+
   .btn-floating {
-    @apply font-mono bg-standard-gradient text-white font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:-translate-x-0.5;
+    @apply font-mono bg-standard-gradient text-white font-bold floating;
   }
 
   .btn-xl {
@@ -28,5 +32,8 @@
     @apply py-2 px-4 text-base;
   }
 
+  .btn-header {
+    @apply text-white hover:bg-white hover:bg-opacity-10 font-mono
+  }
 
 }
