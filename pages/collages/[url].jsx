@@ -191,6 +191,18 @@ function Collage({ url, editing, adding, onDoneAdding }) {
 
   return (
     <>
+      <div className="relative" ref={drop} style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
+        {backgroundImageUrl && (
+          <img src={backgroundImageUrl} alt="background image" ref={imageRef} className="w-full" />
+        )}
+        {persistedElementUrls && persistedElementUrls.map(url => (
+          editing ? (
+            <EditableElement url={url} key={url} collageRef={imageRef} deleteElement={deleteElement} />
+          ) : (
+            <Element url={url} key={url} />
+          )
+        ))}
+      </div>
       <Dialog open={adding} onClose={onDoneAdding}
         className="fixed z-10 inset-0 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen">
@@ -208,18 +220,6 @@ function Collage({ url, editing, adding, onDoneAdding }) {
           </div>
         </div>
       </Dialog>
-      <div className="relative" ref={drop} style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
-        {backgroundImageUrl && (
-          <img src={backgroundImageUrl} alt="background image" ref={imageRef} className="w-full" />
-        )}
-        {persistedElementUrls && persistedElementUrls.map(url => (
-          editing ? (
-            <EditableElement url={url} key={url} collageRef={imageRef} deleteElement={deleteElement} />
-          ) : (
-            <Element url={url} key={url} />
-          )
-        ))}
-      </div>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef } from 'react';
 
 import { fetch } from '@inrupt/solid-client-authn-browser'
 import { saveFileInContainer, getSourceUrl } from '@inrupt/solid-client'
@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 import { Loader } from './elements';
 
-const ImageEditingModule = ({ src, onSave, onClose, ...props }) => {
+const ImageEditingModule = forwardRef(function ImageEditingModule({ src, onSave, onClose, ...props }, ref) {
   const [saving, setSaving] = useState()
   const cropperRef = useRef()
   const save = async () => {
@@ -18,7 +18,7 @@ const ImageEditingModule = ({ src, onSave, onClose, ...props }) => {
     setSaving(false)
   }
   return (
-    <div className="p-4" onClose={onClose} {...props}>
+    <div className="p-4" onClose={onClose} ref={ref} {...props}>
       <Cropper
         ref={cropperRef}
         src={src}
@@ -48,7 +48,7 @@ const ImageEditingModule = ({ src, onSave, onClose, ...props }) => {
       </div>
     </div >
   )
-}
+})
 
 const uploadToContainerFromCanvas = (canvas, containerUri, type, name) => new Promise((resolve, reject) => {
   canvas.toBlob(async (blob) => {
@@ -67,11 +67,11 @@ const uploadToContainerFromCanvas = (canvas, containerUri, type, name) => new Pr
 
 })
 
-function UploadFileButton({ onFileChanged, ...rest }) {
+const UploadFileButton = forwardRef(function UploadFileButton({ onFileChanged, ...rest }, ref) {
   const inputRef = useRef()
   return (
     <>
-      <button {...rest} onClick={() => inputRef.current.click()} />
+      <button {...rest} onClick={() => inputRef.current.click()} ref={ref} />
       <input
         ref={inputRef}
         accept="image/*"
@@ -84,9 +84,9 @@ function UploadFileButton({ onFileChanged, ...rest }) {
       />
     </>
   )
-}
+})
 
-export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl, buttonContent = "pick an image" }) {
+const ImageUploader = forwardRef(function ImageUploader({ onSave, onClose, imageUploadContainerUrl, buttonContent = "pick an image" }, ref) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [originalSrc, setOriginalSrc] = useState()
@@ -137,9 +137,9 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
             setEditing(false)
           }} />
       ) : saving ? (
-        <Loader />
+        <Loader ref={ref} />
       ) : (
-        <div className="flex flex-col h-96">
+        <div className="flex flex-col h-96" ref={ref}>
           {previewSrc && (
             <div className="flex flex-row justify-center items-center flex-grow">
               <img src={previewSrc} className="h-32 object-contain" alt="your new profile" />
@@ -170,4 +170,6 @@ export default function ImageUploader({ onSave, onClose, imageUploadContainerUrl
       )}
     </>
   )
-}
+})
+
+export default ImageUploader;
