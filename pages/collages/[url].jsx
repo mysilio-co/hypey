@@ -61,8 +61,10 @@ function EditableElement({ url, collageRef, deleteElement }) {
     }),
     canDrag: () => true,
     end: async function (item, monitor) {
-      const { x: newX, y: newY } = monitor.getDropResult()
-
+      const { x: dropX, y: dropY } = monitor.getDropResult()
+      const { x: collageX, y: collageY } = collageRef.current.getBoundingClientRect()
+      const newX = dropX - collageX
+      const newY = dropY - collageY
       if (newX && newY) {
         try {
           if (collageRef.current.clientWidth && collageRef.current.clientHeight) {
@@ -180,16 +182,17 @@ function Collage({ url, editing, adding, onDoneAdding }) {
   const [, drop] = useDrop(
     () => ({
       accept: HYPE.Element,
-      drop: (_, monitor) => monitor.getSourceClientOffset()
+      drop: (_, monitor) => {
+        return monitor.getSourceClientOffset()
+      }
     })
   )
   const imageRef = useRef()
   return (
-    <div className="flex flex-col">
-      <div className="relative" ref={drop} style={{backgroundImage: `url(${backgroundImageUrl})`}}>
+    <>
+      <div className="relative" ref={drop} style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
         {backgroundImageUrl && (
-          <img src={backgroundImageUrl} alt="background image" ref={imageRef}
-          className="w-full" />
+          <img src={backgroundImageUrl} alt="background image" ref={imageRef} className="w-full" />
         )}
         {persistedElementUrls && persistedElementUrls.map(url => (
           editing ? (
@@ -219,7 +222,7 @@ function Collage({ url, editing, adding, onDoneAdding }) {
           </div>
         </div>
       </Dialog>
-    </div>
+    </>
   )
 }
 
@@ -234,7 +237,7 @@ export default function CollagePage() {
   const [adding, setAdding] = useState(false)
 
   return (
-    <div className="flex flex-col w-screen h-screen">
+    <div className="w-screen min-h-screen">
       <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
         <Link href="/"><a className="btn-md btn-header">dashboard</a></Link>
         {editing ? (
