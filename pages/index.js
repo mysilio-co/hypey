@@ -128,24 +128,28 @@ function LoggedIn() {
   const [dialogOpen, setDialogOpen] = useState(false)
   return app ? (
     <>
-      <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
+      <div className="w-screen bg-gradient-header flex flex-row justify-between shadow-lg">
         <button className="btn-md btn-header" onClick={() => setDialogOpen(true)}>create new collage</button>
         <NewCollageCreatorDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
         <button className="btn-md btn-header" onClick={() => logout()}>
           log out
         </button>
       </div>
-      {getUrl(app, HYPE.hasCollages) && (
+      {getUrl(app, HYPE.hasCollages) ? (
         <Collages />
+      ) : (
+        <div className="mt-8 font-logo text-standard-gradient text-2xl">
+          click <span className="font-mono">create new collage</span> above to get started!
+        </div>
       )}
 
     </>
   ) : (
     (error && (error.statusCode == 404)) ? (
       <div className="flex flex-col items-center gap-4 text-white font-black font-4xl">
-        <h2>Oh you must be new here!</h2>
-        <h2>Are you ready to</h2>
-        <button className="btn-floating font-6xl px-4 py-3 " onClick={initApp}>GET HYPEY?!</button>
+        <h2 className="mt-24 text-6xl text-gray-900 font-logo text-standard-gradient pb-4">Oh you must be new here!</h2>
+        <h2 className="mt-16 text-4xl text-gray-900 font-logo text-standard-gradient pb-4">Are you ready to</h2>
+        <button className="btn-floating btn-xl font-6xl px-4 py-3" onClick={initApp}>GET HYPEY?!</button>
       </div>
     ) : (
       <Loader />
@@ -170,7 +174,7 @@ export default function Home() {
               <LoggedIn />
             ) : (
               <>
-                <h1 className="bg-standard-gradient text-transparent bg-clip-text text-9xl pb-8 mb-16 font-black font-logo">
+                <h1 className="text-standard-gradient text-9xl pb-8 mb-16 font-black font-logo">
                   hypey
                 </h1>
                 <button className="btn-floating btn-lg mb-2"
