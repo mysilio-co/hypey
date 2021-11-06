@@ -112,7 +112,7 @@ function NewCollageCreatorDialog(props) {
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
 
         <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
-          <Dialog.Title className="text-4xl">
+          <Dialog.Title className="text-4xl font-logo text-standard-gradient">
             Create a new collage
           </Dialog.Title>
           <NewCollageCreator />

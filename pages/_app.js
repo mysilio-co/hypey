@@ -22,7 +22,7 @@ function MyApp({ Component, pageProps }) {
       <Head>
         <title>hypey</title>
         <meta name="description" content="get hypey" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.png" />
       </Head>
       <DndProvider backend={HTML5Backend}>
         <Component {...pageProps} />

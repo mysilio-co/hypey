@@ -211,7 +211,7 @@ function Collage({ url, editing, adding, onDoneAdding }) {
           <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
 
           <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
-            <Dialog.Title className="text-4xl">
+            <Dialog.Title className="text-4xl font-logo text-standard-gradient">
               Add a new element to this collage
             </Dialog.Title>
 
