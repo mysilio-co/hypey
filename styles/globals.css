@@ -16,6 +16,10 @@
     @apply shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 hover:-translate-x-0.5
   }
 
+  .text-standard-gradient {
+    @apply bg-standard-gradient text-transparent bg-clip-text;
+  }
+
   .btn-floating {
     @apply font-mono bg-standard-gradient text-white font-bold floating;
   }
