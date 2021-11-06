@@ -188,6 +188,7 @@ function Collage({ url, editing, adding, onDoneAdding }) {
     })
   )
   const imageRef = useRef()
+
   return (
     <>
       <div className="relative" ref={drop} style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
@@ -204,9 +205,7 @@ function Collage({ url, editing, adding, onDoneAdding }) {
       </div>
 
       <Dialog open={adding} onClose={onDoneAdding}
-
-        className="fixed z-10 inset-0 overflow-y-auto"
-      >
+        className="fixed z-10 inset-0 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen">
           <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
 
