@@ -18,6 +18,10 @@ module.exports = {
       fontFamily: {
         logo: ['Paytone One', 'sans-serif'],
         mono: ['Inconsolata', 'monospace']
+      },
+      cursor: {
+        grab: 'grab',
+        grabbing: 'grabbing'
       }
     },
 

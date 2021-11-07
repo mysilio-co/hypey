@@ -54,7 +54,7 @@ function EditableElement({ url, collageRef, deleteElement }) {
   const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
   const linksTo = element && getUrl(element, HYPE.linksTo)
 
-  const [_, drag] = useDrag(() => ({
+  const [{isDragging}, drag] = useDrag(() => ({
     type: HYPE.Element,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging()
@@ -125,7 +125,7 @@ function EditableElement({ url, collageRef, deleteElement }) {
   }, [saveElement, element, linksTo])
 
   return (
-    <div ref={drag} className={`shadow-2xl opacity-70 absolute`} style={style}>
+    <div ref={drag} className={`shadow-2xl opacity-70 absolute ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`} style={style}>
       <img src={imageUrl} className="object-cover" alt="collage element" />
       <div className="absolute top-0 -right-8 px-2 flex flex-col bg-white bg-opacity-80">
         <div draggable className="cursor-move mb-2"
