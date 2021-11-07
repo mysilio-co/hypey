@@ -93,7 +93,7 @@ function Collages() {
   // sure we don't try to render a collage until we have a real URL to work with
   const persistedCollageUrls = collageUrls && collageUrls.filter(u => isUrl(u))
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 p-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-8">
       {persistedCollageUrls && persistedCollageUrls.map(url =>
       (
         <Collage url={url} key={url} />
