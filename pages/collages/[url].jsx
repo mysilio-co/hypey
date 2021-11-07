@@ -188,9 +188,31 @@ function Collage({ url, editing, adding, onDoneAdding }) {
     })
   )
   const imageRef = useRef()
-
   return (
     <>
+      {/* control dialog mounting manually because of this bug: https://github.com/tailwindlabs/headlessui/issues/479 */}
+      {adding && (
+        <Dialog open={adding} onClose={onDoneAdding}
+          className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+
+            <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
+              <Dialog.Title className="text-4xl font-logo text-standard-gradient">
+                Add a new element to this collage
+              </Dialog.Title>
+              <ImageUploader onSave={onSaveNewElement}
+                imageUploadContainerUrl={imageUploadContainerUrl}
+                buttonContent="pick an image" />
+              <button
+                className="btn-md btn-floating"
+                onClick={() => onDoneAdding()}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      )}
       <div className="relative" ref={drop} style={{ backgroundImage: `url(${backgroundImageUrl})` }}>
         {backgroundImageUrl && (
           <img src={backgroundImageUrl} alt="background image" ref={imageRef} className="w-full" />
@@ -203,23 +225,6 @@ function Collage({ url, editing, adding, onDoneAdding }) {
           )
         ))}
       </div>
-      <Dialog open={adding} onClose={onDoneAdding}
-        className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-center justify-center min-h-screen">
-          <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-
-          <div className="relative bg-white rounded max-w-sm mx-auto text-center p-4">
-            <Dialog.Title className="text-4xl font-logo text-standard-gradient">
-              Add a new element to this collage
-            </Dialog.Title>
-
-            <ImageUploader onSave={onSaveNewElement}
-              imageUploadContainerUrl={imageUploadContainerUrl}
-              buttonContent="pick an image" />
-
-          </div>
-        </div>
-      </Dialog>
     </>
   )
 }

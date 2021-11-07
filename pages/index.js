@@ -102,10 +102,11 @@ function Collages() {
   )
 }
 
-function NewCollageCreatorDialog(props) {
+function NewCollageCreatorDialog({ onClose, ...props }) {
   return (
     <Dialog
       {...props}
+      onClose={onClose}
       className="fixed z-10 inset-0 overflow-y-auto"
     >
       <div className="flex items-center justify-center min-h-screen">
@@ -116,6 +117,10 @@ function NewCollageCreatorDialog(props) {
             Create a new collage
           </Dialog.Title>
           <NewCollageCreator />
+          <button onClick={onClose}
+            className="btn-md btn-floating">
+            Cancel
+          </button>
         </div>
       </div>
     </Dialog>
@@ -130,7 +135,10 @@ function LoggedIn() {
     <>
       <div className="w-screen bg-gradient-header flex flex-row justify-between shadow-lg">
         <button className="btn-md btn-header" onClick={() => setDialogOpen(true)}>create new collage</button>
-        <NewCollageCreatorDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        {/* control dialog mounting manually because of this bug: https://github.com/tailwindlabs/headlessui/issues/479  */}
+        {dialogOpen && (
+          <NewCollageCreatorDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        )}
         <button className="btn-md btn-header" onClick={() => logout()}>
           log out
         </button>
