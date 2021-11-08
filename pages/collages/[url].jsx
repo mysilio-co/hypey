@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { useThing, useWebId } from 'swrlit'
+import { useThing, useWebId, useAuthentication } from 'swrlit'
 import {
   getUrl, getUrlAll, setThing, addUrl, getInteger, setInteger,
   getDecimal, setDecimal, removeThing, solidDatasetAsMarkdown, setUrl, removeUrl
@@ -54,7 +54,7 @@ function EditableElement({ url, collageRef, deleteElement }) {
   const width = element && (getDecimal(element, HYPE.elementWidth) || 10)
   const linksTo = element && getUrl(element, HYPE.linksTo)
 
-  const [{isDragging}, drag] = useDrag(() => ({
+  const [{ isDragging }, drag] = useDrag(() => ({
     type: HYPE.Element,
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging()
@@ -231,6 +231,7 @@ function Collage({ url, editing, adding, onDoneAdding }) {
 
 export default function CollagePage() {
   const webId = useWebId()
+  const { loggedIn } = useAuthentication()
   const { query: { url } } = useRouter()
   const collageUrl = url && decodeURIComponent(url)
   const { thing: collage } = useThing(collageUrl)
@@ -238,32 +239,41 @@ export default function CollagePage() {
   const editable = webId && authorWebId && (webId === authorWebId)
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
-
+  const showHeader = loggedIn || editable
+  // for now, show the footer any time we don't show the footer
+  const showFooter = !showHeader
   return (
     <div className="w-screen min-h-screen">
-      <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
-        <Link href="/"><a className="btn-md btn-header">dashboard</a></Link>
-        {editing ? (
-          <div className="flex flex-row">
-            <button className="btn-md btn-header"
-              onClick={() => setEditing(false)}>
-              preview collage
-            </button>
-            <button className="btn-md btn-header"
-              onClick={() => setAdding(true)}>
-              add image to collage
-            </button>
-          </div>
-        ) : (
-          editable && (
-            <button className="btn-md btn-header"
-              onClick={() => setEditing(true)}>
-              edit collage
-            </button>
-          )
-        )}
-      </div>
+      {showHeader && (
+        <div className="w-full bg-gradient-header flex flex-row justify-between shadow-lg">
+          <Link href="/"><a className="btn-md btn-header">dashboard</a></Link>
+          {editing ? (
+            <div className="flex flex-row">
+              <button className="btn-md btn-header"
+                onClick={() => setEditing(false)}>
+                preview collage
+              </button>
+              <button className="btn-md btn-header"
+                onClick={() => setAdding(true)}>
+                add image to collage
+              </button>
+            </div>
+          ) : (
+            editable && (
+              <button className="btn-md btn-header"
+                onClick={() => setEditing(true)}>
+                edit collage
+              </button>
+            )
+          )}
+        </div>
+      )}
       <Collage url={collageUrl} editing={editing} adding={adding} onDoneAdding={() => setAdding(false)} />
+      {showFooter && (
+        <div className="w-full bg-gradient-header flex flex-row justify-center">
+          <Link href="/"><a className="btn-md btn-header font-logo">get hypey!</a></Link>
+        </div>
+      )}
     </div>
   )
 }
