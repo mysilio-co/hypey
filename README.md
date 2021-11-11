@@ -1,6 +1,11 @@
 # hypey
 
 hypey is a [Solid](https://solidproject.org) app built with [Next.js](https://nextjs.org)
+
+you can use Hypey to create a visual "Linktee" stored in your Solid POD:
+
+https://hypey.mysilio.page
+
 ## Getting Started
 
 First, run the development server:
